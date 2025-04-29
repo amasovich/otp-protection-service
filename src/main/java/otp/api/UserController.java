@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import otp.service.OtpService;
 import otp.dao.impl.OtpCodeDaoImpl;
 import otp.dao.impl.OtpConfigDaoImpl;
+import otp.dao.impl.UserDaoImpl;
 import otp.service.notification.NotificationServiceFactory;
 import otp.service.notification.NotificationChannel;
 import otp.util.JsonUtil;
@@ -13,9 +14,11 @@ import otp.util.HttpUtils;
 import java.io.IOException;
 
 public class UserController {
+    // Передаём в OtpService: код DAO, конфиг DAO, UserDao и фабрику уведомлений
     private final OtpService otpService = new OtpService(
             new OtpCodeDaoImpl(),
             new OtpConfigDaoImpl(),
+            new UserDaoImpl(),
             new NotificationServiceFactory()
     );
 
@@ -35,7 +38,6 @@ public class UserController {
             otpService.sendOtpToUser(req.userId, req.operationId, NotificationChannel.valueOf(req.channel));
             HttpUtils.sendEmptyResponse(exchange, 202); // Accepted
         } catch (IllegalArgumentException e) {
-            // неверный канал или входные данные
             HttpUtils.sendError(exchange, 400, e.getMessage());
         } catch (Exception e) {
             HttpUtils.sendError(exchange, 500, "Internal server error");
@@ -62,7 +64,6 @@ public class UserController {
                 HttpUtils.sendError(exchange, 400, "Invalid or expired code");
             }
         } catch (IllegalArgumentException e) {
-            // некорректный формат кода
             HttpUtils.sendError(exchange, 400, e.getMessage());
         } catch (Exception e) {
             HttpUtils.sendError(exchange, 500, "Internal server error");
