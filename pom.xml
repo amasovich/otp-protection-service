@@ -23,7 +23,6 @@
     </repositories>
 
     <dependencies>
-
         <!-- SLF4J API для логирования -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -31,11 +30,18 @@
             <version>1.7.36</version>
         </dependency>
 
-        <!-- Logback Classic как реализация SLF4J -->
+        <!-- Обновленная безопасная версия logback-classic -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.11</version>
+            <version>1.4.12</version> <!-- Обновленная безопасная версия -->
+        </dependency>
+
+        <!-- Обновленная безопасная версия logback-core -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.5.13</version> <!-- Обновленная безопасная версия -->
         </dependency>
 
         <!-- JavaMail -->
@@ -59,26 +65,18 @@
             <version>4.5.13</version>
         </dependency>
 
-        <!-- Jackson для JSON -->
+        <!-- Обновленная безопасная версия jackson-databind -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.13.3</version>
+            <version>2.13.4.2</version> <!-- Обновленная безопасная версия -->
         </dependency>
 
-        <!-- PostgreSQL JDBC -->
+        <!-- Обновленная безопасная версия PostgreSQL JDBC -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.5.0</version>
-        </dependency>
-
-        <!-- SLF4J + Logback -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.11</version>
+            <version>42.7.2</version> <!-- Обновленная безопасная версия -->
         </dependency>
     </dependencies>
-
 </project>
