@@ -27,7 +27,7 @@ public class UserService {
             logger.warn("Attempt to register with existing username: {}", username);
             throw new IllegalArgumentException("Username already exists");
         }
-        if (role == UserRole.ADMIN && userDao.adminExists()) {
+        if (role == UserRole.ADMIN && adminExists()) {  // Используем новый метод adminExists
             logger.warn("Attempt to register second ADMIN: {}", username);
             throw new IllegalStateException("Administrator already exists");
         }
@@ -36,6 +36,15 @@ public class UserService {
         User user = new User(null, username, hashed, role);
         userDao.create(user);
         logger.info("Registered new user: {} with role {}", username, role);
+    }
+
+    /**
+     * Проверяет, существует ли уже администратор.
+     * @return true, если администратор существует, иначе false
+     */
+    public boolean adminExists() {
+        List<User> users = userDao.findAllUsersWithoutAdmins();  // Получаем всех пользователей без администраторов
+        return users.isEmpty();  // Если список пуст, значит администратор не существует
     }
 
     /**
@@ -70,4 +79,3 @@ public class UserService {
         logger.info("Deleted user with id {}", id);
     }
 }
-
