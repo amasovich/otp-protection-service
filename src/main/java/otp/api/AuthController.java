@@ -1,6 +1,7 @@
 package otp.api;
 
 import com.sun.net.httpserver.HttpExchange;
+import otp.dao.impl.UserDaoImpl;
 import otp.service.UserService;
 import otp.model.UserRole;
 import otp.util.JsonUtil;
@@ -10,7 +11,8 @@ import java.io.IOException;
 import java.util.Map;
 
 public class AuthController {
-    private final UserService userService = new UserService();
+    // Инжектим DAO в сервис
+    private final UserService userService = new UserService(new UserDaoImpl());
 
     public void handleRegister(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
@@ -27,9 +29,8 @@ public class AuthController {
             RegisterRequest req = JsonUtil.fromJson(exchange.getRequestBody(), RegisterRequest.class);
             userService.register(req.username, req.password, UserRole.valueOf(req.role));
             HttpUtils.sendEmptyResponse(exchange, 201); // Created
-        } catch (IllegalArgumentException e) {
-            HttpUtils.sendError(exchange, 400, "Invalid role or JSON");
-        } catch (UserService.UserAlreadyExistsException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // и для дубликата логина, и для попытки второго ADMIN
             HttpUtils.sendError(exchange, 409, e.getMessage());
         } catch (Exception e) {
             HttpUtils.sendError(exchange, 500, "Internal server error");
@@ -52,8 +53,9 @@ public class AuthController {
             String token = userService.login(req.username, req.password);
             String json = JsonUtil.toJson(Map.of("token", token));
             HttpUtils.sendJsonResponse(exchange, 200, json);
-        } catch (UserService.AuthenticationException e) {
-            HttpUtils.sendError(exchange, 401, "Invalid username or password");
+        } catch (IllegalArgumentException e) {
+            // неверный логин или пароль
+            HttpUtils.sendError(exchange, 401, e.getMessage());
         } catch (Exception e) {
             HttpUtils.sendError(exchange, 500, "Internal server error");
         }
