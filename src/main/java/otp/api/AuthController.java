@@ -6,19 +6,18 @@ import otp.model.UserRole;
 import otp.service.UserService;
 import otp.util.JsonUtil;
 import otp.util.HttpUtils;
+import otp.util.JwtUtils;  // Импортируем JwtUtils
 
 import java.io.IOException;
 import java.util.Map;
 
 /**
  * Контроллер аутентификации и регистрации пользователей.
- * <p>
  * Обрабатывает публичные запросы:
  * <ul>
  *   <li>POST /register — регистрация нового пользователя (username, password, role)</li>
  *   <li>POST /login    — аутентификация и выдача токена (username, password)</li>
  * </ul>
- * </p>
  */
 public class AuthController {
     private final UserService userService = new UserService(new UserDaoImpl());
@@ -51,6 +50,13 @@ public class AuthController {
 
         try {
             RegisterRequest req = JsonUtil.fromJson(exchange.getRequestBody(), RegisterRequest.class);
+
+            // Проверка, не существует ли уже администратор
+            if ("ADMIN".equals(req.role) && userService.adminExists()) {
+                HttpUtils.sendError(exchange, 409, "Admin already exists");
+                return;
+            }
+
             userService.register(req.username, req.password, UserRole.valueOf(req.role));
             HttpUtils.sendEmptyResponse(exchange, 201);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -89,7 +95,11 @@ public class AuthController {
         try {
             LoginRequest req = JsonUtil.fromJson(exchange.getRequestBody(), LoginRequest.class);
             String token = userService.login(req.username, req.password);
-            String json = JsonUtil.toJson(Map.of("token", token));
+            if (token == null) {
+                HttpUtils.sendError(exchange, 401, "Unauthorized");
+                return;
+            }
+            String json = JsonUtil.toJson(Map.of("token", token)); // Используем сгенерированный токен
             HttpUtils.sendJsonResponse(exchange, 200, json);
         } catch (IllegalArgumentException e) {
             HttpUtils.sendError(exchange, 401, e.getMessage());
