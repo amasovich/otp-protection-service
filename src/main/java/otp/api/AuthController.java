@@ -2,18 +2,42 @@ package otp.api;
 
 import com.sun.net.httpserver.HttpExchange;
 import otp.dao.impl.UserDaoImpl;
-import otp.service.UserService;
 import otp.model.UserRole;
+import otp.service.UserService;
 import otp.util.JsonUtil;
 import otp.util.HttpUtils;
 
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Контроллер аутентификации и регистрации пользователей.
+ * <p>
+ * Обрабатывает публичные запросы:
+ * <ul>
+ *   <li>POST /register — регистрация нового пользователя (username, password, role)</li>
+ *   <li>POST /login    — аутентификация и выдача токена (username, password)</li>
+ * </ul>
+ * </p>
+ */
 public class AuthController {
-    // Инжектим DAO в сервис
     private final UserService userService = new UserService(new UserDaoImpl());
 
+    /**
+     * Обрабатывает HTTP POST запрос на регистрацию пользователя.
+     * Проверяет метод, Content-Type и формат JSON, затем вызывает UserService.register().
+     * Возвращает:
+     * <ul>
+     *   <li>201 Created — при успешной регистрации</li>
+     *   <li>409 Conflict — если имя занято или администратор уже существует</li>
+     *   <li>415 Unsupported Media Type — если Content-Type некорректен</li>
+     *   <li>405 Method Not Allowed — если метод не POST</li>
+     *   <li>500 Internal Server Error — при других ошибках</li>
+     * </ul>
+     *
+     * @param exchange объект HttpExchange для текущего запроса
+     * @throws IOException при ошибках чтения/записи
+     */
     public void handleRegister(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             HttpUtils.sendError(exchange, 405, "Method Not Allowed");
@@ -28,15 +52,29 @@ public class AuthController {
         try {
             RegisterRequest req = JsonUtil.fromJson(exchange.getRequestBody(), RegisterRequest.class);
             userService.register(req.username, req.password, UserRole.valueOf(req.role));
-            HttpUtils.sendEmptyResponse(exchange, 201); // Created
+            HttpUtils.sendEmptyResponse(exchange, 201);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // и для дубликата логина, и для попытки второго ADMIN
             HttpUtils.sendError(exchange, 409, e.getMessage());
         } catch (Exception e) {
             HttpUtils.sendError(exchange, 500, "Internal server error");
         }
     }
 
+    /**
+     * Обрабатывает HTTP POST запрос на аутентификацию пользователя.
+     * Проверяет метод, Content-Type и формат JSON, затем вызывает UserService.login().
+     * Возвращает:
+     * <ul>
+     *   <li>200 OK — возвращает JSON {"token":"..."}</li>
+     *   <li>401 Unauthorized — если логин или пароль неверны</li>
+     *   <li>415 Unsupported Media Type — если Content-Type некорректен</li>
+     *   <li>405 Method Not Allowed — если метод не POST</li>
+     *   <li>500 Internal Server Error — при других ошибках</li>
+     * </ul>
+     *
+     * @param exchange объект HttpExchange для текущего запроса
+     * @throws IOException при ошибках чтения/записи
+     */
     public void handleLogin(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             HttpUtils.sendError(exchange, 405, "Method Not Allowed");
@@ -54,19 +92,24 @@ public class AuthController {
             String json = JsonUtil.toJson(Map.of("token", token));
             HttpUtils.sendJsonResponse(exchange, 200, json);
         } catch (IllegalArgumentException e) {
-            // неверный логин или пароль
             HttpUtils.sendError(exchange, 401, e.getMessage());
         } catch (Exception e) {
             HttpUtils.sendError(exchange, 500, "Internal server error");
         }
     }
 
-    // DTOs для разбора JSON
+    /**
+     * DTO для разбора JSON тела запроса регистрации.
+     */
     private static class RegisterRequest {
         public String username;
         public String password;
         public String role;
     }
+
+    /**
+     * DTO для разбора JSON тела запроса логина.
+     */
     private static class LoginRequest {
         public String username;
         public String password;
