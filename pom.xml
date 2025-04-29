@@ -84,5 +84,12 @@
             <artifactId>java-jwt</artifactId>
             <version>3.18.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version> <!-- Версия может быть другой, но 4.0.1 стабильна -->
+            <scope>provided</scope> <!-- Указываем, что это зависимость для разработки и не будет включена в финальную сборку -->
+        </dependency>
     </dependencies>
 </project>
