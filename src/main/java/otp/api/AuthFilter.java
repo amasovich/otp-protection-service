@@ -2,6 +2,7 @@ package otp.api;
 
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.Filter.Chain;
 import otp.model.User;
 import otp.model.UserRole;
 import otp.util.HttpUtils;
@@ -12,10 +13,11 @@ import java.io.IOException;
 /**
  * Фильтр аутентификации и авторизации для HTTP-контроллеров.
  * <p>
- * Проверяет наличие заголовка Authorization: Bearer <token>,
+ * Проверяет наличие заголовка Authorization: Bearer &lt;token&gt;,
  * валидирует токен через TokenManager и проверяет требуемую роль.
- * Если проверка проходит, сохраняет объект User в exchange.setAttribute("user", user)
- * и передаёт управление дальше. Иначе возвращает соответствующий HTTP-статус:
+ * Если проверка проходит, сохраняет объект User в
+ * exchange.setAttribute("user", user) и передаёт управление дальше.
+ * Иначе возвращает соответствующий HTTP-статус:
  * <ul>
  *   <li>401 Unauthorized — при отсутствии или недействительном токене</li>
  *   <li>403 Forbidden — при недостаточности прав</li>
@@ -45,7 +47,8 @@ public class AuthFilter extends Filter {
             return;
         }
         String token = authHeader.substring(7);
-        User user = TokenManager.validateToken(token);
+        // Получаем пользователя по токену
+        User user = TokenManager.getUser(token);
         if (user == null) {
             HttpUtils.sendError(exchange, 401, "Invalid or expired token");
             return;
@@ -58,4 +61,3 @@ public class AuthFilter extends Filter {
         chain.doFilter(exchange);
     }
 }
-
