@@ -78,5 +78,11 @@
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version> <!-- Обновленная безопасная версия -->
         </dependency>
+
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>3.18.1</version>
+        </dependency>
     </dependencies>
 </project>
